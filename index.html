@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21世纪中日韩与上海人均GDP变化趋势报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center; font-size: 2rem; font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; }
+        .chart-wrapper {
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px; padding: 2rem; margin-bottom: 2rem; backdrop-filter: blur(10px);
+        }
+        .chart-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; color: #f1f5f9; }
+        .chart-container { position: relative; height: 480px; }
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 12px; padding: 1.5rem; backdrop-filter: blur(10px);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(148, 163, 184, 0.3); }
+        .stat-card .label { font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 700; }
+        .stat-card .change { font-size: 0.8rem; margin-top: 0.35rem; }
+        .stat-card .change.up { color: #34d399; }
+        .stat-card .change.down { color: #f87171; }
+        .china .value { color: #f87171; }
+        .japan .value { color: #60a5fa; }
+        .korea .value { color: #a78bfa; }
+        .shanghai .value { color: #fbbf24; }
+        .section {
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px; padding: 2rem; margin-bottom: 2rem; backdrop-filter: blur(10px);
+        }
+        .section h2 {
+            font-size: 1.3rem; font-weight: 600; color: #f1f5f9;
+            margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .section h3 { font-size: 1.05rem; font-weight: 600; color: #cbd5e1; margin: 1.25rem 0 0.6rem; }
+        .section p { color: #94a3b8; line-height: 1.75; font-size: 0.95rem; }
+        .section ul { color: #94a3b8; line-height: 1.75; font-size: 0.95rem; padding-left: 1.5rem; }
+        .section li { margin-bottom: 0.3rem; }
+        .highlight { color: #f1f5f9; font-weight: 500; }
+        .tag {
+            display: inline-block; padding: 2px 10px; border-radius: 9999px;
+            font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem;
+        }
+        .tag-red { background: rgba(248,113,113,0.15); color: #f87171; }
+        .tag-blue { background: rgba(96,165,250,0.15); color: #60a5fa; }
+        .tag-purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .tag-yellow { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .tag-green { background: rgba(52,211,153,0.15); color: #34d399; }
+        .tag-orange { background: rgba(251,146,60,0.15); color: #fb923c; }
+
+        .scenario-box {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin: 1rem 0;
+        }
+        .scenario-card {
+            border-radius: 12px; padding: 1.25rem; border: 1px solid;
+        }
+        .scenario-card.optimistic {
+            background: rgba(52,211,153,0.05); border-color: rgba(52,211,153,0.2);
+        }
+        .scenario-card.pessimistic {
+            background: rgba(248,113,113,0.05); border-color: rgba(248,113,113,0.2);
+        }
+        .scenario-card h4 { font-size: 0.95rem; margin-bottom: 0.75rem; }
+        .scenario-card.optimistic h4 { color: #34d399; }
+        .scenario-card.pessimistic h4 { color: #f87171; }
+        .scenario-card table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
+        .scenario-card th { text-align: left; color: #94a3b8; font-weight: 500; padding: 0.3rem 0; }
+        .scenario-card td { text-align: right; color: #cbd5e1; padding: 0.3rem 0; border-bottom: 1px solid rgba(148,163,184,0.08); }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 1rem; }
+        .data-table th {
+            background: rgba(51, 65, 85, 0.5); padding: 0.6rem 0.75rem; text-align: right;
+            font-weight: 600; color: #cbd5e1; border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .data-table th:first-child { text-align: center; }
+        .data-table td {
+            padding: 0.5rem 0.75rem; text-align: right; color: #94a3b8;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+        }
+        .data-table td:first-child { text-align: center; color: #cbd5e1; font-weight: 500; }
+        .data-table tr:hover td { background: rgba(51, 65, 85, 0.3); }
+        .forecast-row td { color: rgba(52, 211, 153, 0.7); }
+        .forecast-row td:first-child { color: rgba(52, 211, 153, 0.9); }
+        .pessimistic-row td { color: rgba(248, 113, 113, 0.6); font-style: italic; }
+        .pessimistic-row td:first-child { color: rgba(248, 113, 113, 0.8); }
+
+        .footer {
+            text-align: center; color: #475569; font-size: 0.8rem;
+            margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .warning-box {
+            background: rgba(251, 146, 60, 0.08); border: 1px solid rgba(251, 146, 60, 0.25);
+            border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;
+        }
+        .warning-box h3 { color: #fb923c; font-size: 1rem; margin-bottom: 0.5rem; }
+        .warning-box p { color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; }
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.5rem; }
+            .chart-container { height: 360px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .scenario-box { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌏 21世纪中日韩与上海人均GDP变化趋势</h1>
+    <p class="subtitle">2000–2030 · 名义人均GDP（美元）· 含乐观/悲观双情景预测</p>
+
+    <!-- 核心指标卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card china">
+            <div class="label">🇨🇳 中国 · 2025</div>
+            <div class="value">$13,746</div>
+            <div class="change up">↑ 14.2x vs 2000年 ($969)</div>
+        </div>
+        <div class="stat-card japan">
+            <div class="label">🇯🇵 日本 · 2025</div>
+            <div class="value">$34,713</div>
+            <div class="change down">↓ 29.4% vs 峰值2012年 ($49,145)</div>
+        </div>
+        <div class="stat-card korea">
+            <div class="label">🇰🇷 韩国 · 2025</div>
+            <div class="value">$35,962</div>
+            <div class="change up">↑ 2.83x vs 2000年 ($12,710)</div>
+        </div>
+        <div class="stat-card shanghai">
+            <div class="label">🏙️ 上海 · 2025</div>
+            <div class="value">$31,471</div>
+            <div class="change up">↑ 8.6x vs 2000年 ($3,661)</div>
+        </div>
+    </div>
+
+    <!-- 重要提示 -->
+    <div class="warning-box">
+        <h3>⚠️ 关于预测的可靠性说明</h3>
+        <p>
+            <strong>2025年数据已更新为实际公布值</strong>（中国：国家统计局2026年2月公报；日本/韩国：IMF WEO Oct 2025；上海：统计局公报）。
+            2026–2030年为预测。名义人均GDP（美元计）受<strong>汇率波动</strong>影响极大。IMF的基准预测隐含了日元大幅升值的假设，
+            但多数汇率预测机构认为日元可能维持弱势甚至进一步贬值。本报告同时提供<strong>乐观情景</strong>（接近IMF基准）
+            和<strong>悲观情景</strong>（汇率维持弱势），以便读者判断区间。日韩两国的不确定性远高于中国。
+        </p>
+    </div>
+
+    <!-- 主折线图：乐观情景 -->
+    <div class="chart-wrapper">
+        <div class="chart-title">📈 人均GDP变化趋势 — 乐观情景（2000–2030）<span class="tag tag-green">IMF基准·2026起预测</span></div>
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 主折线图：悲观情景 -->
+    <div class="chart-wrapper">
+        <div class="chart-title">📉 人均GDP变化趋势 — 悲观情景（2000–2030）<span class="tag tag-orange">汇率弱势·2026起预测</span></div>
+        <div class="chart-container" style="height:420px;">
+            <canvas id="pessimisticChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 增长率图 -->
+    <div class="chart-wrapper">
+        <div class="chart-title">📊 人均GDP年增长率变化（历史数据，%）</div>
+        <div class="chart-container" style="height:360px;">
+            <canvas id="growthChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 情景对比 -->
+    <div class="section">
+        <h2>🔀 乐观 vs 悲观：2030年预测对比</h2>
+        <p style="margin-bottom:1rem;color:#94a3b8;">以下展示两种情景下各经济体2030年人均GDP预测值及其核心假设差异。</p>
+
+        <h3><span class="tag tag-blue">日本</span> 情景对比</h3>
+        <div class="scenario-box">
+            <div class="scenario-card optimistic">
+                <h4>✅ 乐观：$42,700</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~1.0%/年</td></tr>
+                    <tr><td>日元汇率(2030)</td><td>~125 日元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>日银持续加息→日元大幅回升</td></tr>
+                </table>
+            </div>
+            <div class="scenario-card pessimistic">
+                <h4>❌ 悲观：$28,500</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~0.5%/年</td></tr>
+                    <tr><td>日元汇率(2030)</td><td>~175 日元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>日银加息缓慢+美日利差维持→日元持续弱势</td></tr>
+                </table>
+            </div>
+        </div>
+        <p style="margin-top:0.5rem;">
+            <strong>关键判断</strong>：当前日元在~159，多数外汇预测机构（longforecast、Trading Economics）认为2026-2030年日元可能在150-190区间波动，
+            而非IMF假设的120-130。<span class="highlight">悲观情景的概率可能不低于乐观情景</span>。日本以日元计的实际GDP增长乏力（2025年Q1仅0.2%环比），
+            人口每年减少80万+，美元计人均GDP的回升几乎完全依赖汇率。
+        </p>
+
+        <h3><span class="tag tag-purple">韩国</span> 情景对比</h3>
+        <div class="scenario-box">
+            <div class="scenario-card optimistic">
+                <h4>✅ 乐观：$43,600</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~2.5%/年</td></tr>
+                    <tr><td>韩元汇率(2030)</td><td>~1,200 韩元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>半导体超级周期+韩元回升</td></tr>
+                </table>
+            </div>
+            <div class="scenario-card pessimistic">
+                <h4>❌ 悲观：$34,000</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~1.5%/年</td></tr>
+                    <tr><td>韩元汇率(2030)</td><td>~1,500 韩元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>半导体周期下行+人口萎缩加速+韩元弱势</td></tr>
+                </table>
+            </div>
+        </div>
+        <p style="margin-top:0.5rem;">
+            <strong>关键判断</strong>：IMF自己在2025年4月版就把韩国突破4万美元的时间推迟了2年（从2026推迟到2028），
+            2025年10月版又调回$40,802（2028年）。这种反复本身就暴露了不确定性。<span class="highlight">韩国总和生育率仅0.72</span>，
+            是全球最低，劳动力从2028年起将加速萎缩。半导体出口占GDP的20%+，周期性波动极大。
+            悲观情景下，韩国可能长期在$34,000-36,000区间徘徊。
+        </p>
+
+        <h3><span class="tag tag-red">中国</span> 情景对比</h3>
+        <div class="scenario-box">
+            <div class="scenario-card optimistic">
+                <h4>✅ 乐观：$18,200</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~4.5%/年</td></tr>
+                    <tr><td>人民币汇率(2030)</td><td>~6.8 元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>新质生产力发力+人民币企稳</td></tr>
+                </table>
+            </div>
+            <div class="scenario-card pessimistic">
+                <h4>❌ 悲观：$14,500</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~3.0%/年</td></tr>
+                    <tr><td>人民币汇率(2030)</td><td>~8.0 元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>房地产拖累+人口负增长+人民币贬值</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <h3><span class="tag tag-yellow">上海</span> 情景对比</h3>
+        <div class="scenario-box">
+            <div class="scenario-card optimistic">
+                <h4>✅ 乐观：$40,500</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~5.5%/年</td></tr>
+                    <tr><td>人民币汇率(2030)</td><td>~6.8 元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>金融中心+科创引擎+人民币升值</td></tr>
+                </table>
+            </div>
+            <div class="scenario-card pessimistic">
+                <h4>❌ 悲观：$32,000</h4>
+                <table>
+                    <tr><th>假设</th><th>值</th></tr>
+                    <tr><td>实际GDP增速</td><td>~4.0%/年</td></tr>
+                    <tr><td>人民币汇率(2030)</td><td>~8.0 元/美元</td></tr>
+                    <tr><td>核心逻辑</td><td>全国经济放缓拖累+人民币贬值</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完整数据表 -->
+    <div class="section">
+        <h2>📋 完整数据表</h2>
+        <p style="margin-bottom:0.5rem;font-size:0.85rem;">
+            <span class="tag tag-green">乐观</span>接近IMF基准预测 &nbsp;
+            <span class="tag tag-orange">悲观</span>汇率维持弱势情景
+        </p>
+        <div style="overflow-x:auto;">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>年份</th>
+                        <th>🇨🇳 中国</th>
+                        <th>🇯🇵 日本(乐观)</th>
+                        <th>🇯🇵 日本(悲观)</th>
+                        <th>🇰🇷 韩国(乐观)</th>
+                        <th>🇰🇷 韩国(悲观)</th>
+                        <th>🏙️ 上海(乐观)</th>
+                        <th>🏙️ 上海(悲观)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 分析报告 -->
+    <div class="section">
+        <h2>📝 趋势分析与预测（修订版）</h2>
+
+        <h3><span class="tag tag-blue">日本</span> 汇率幻象下的"增长"</h3>
+        <p>
+            日本是本报告中最难预测的经济体，原因是<span class="highlight">名义人均GDP的变动几乎完全由汇率驱动</span>，而非实际经济增长。
+        </p>
+        <ul>
+            <li><span class="highlight">2012年峰值$49,145</span>时，日元汇率约80日元/美元；2024年$32,487时，汇率约150。日元贬值了近一半</li>
+            <li>以日元计，日本人均GDP从2012年的385万日元增至2024年的510万日元，实际增长了32%——但美元计却"缩水"了34%</li>
+            <li>IMF预测2030年$42,702，隐含假设是日元从现在的~159升值到~125。但日银加息步伐缓慢（2026年3月仅加至0.75%），
+                美日利差仍然巨大，多数外汇机构预测日元2027-2030年在150-190区间</li>
+            <li><span class="highlight">我的判断</span>：IMF基准偏乐观。更可能的情景是日元在140-170区间震荡，对应2030年人均GDP约$30,000-35,000。
+                真正回到$40,000+需要日元回到120以下，这在当前货币政策下概率较低</li>
+        </ul>
+
+        <h3><span class="tag tag-purple">韩国</span> 半导体红利与人口悬崖</h3>
+        <p>
+            韩国面临一个矛盾：出口竞争力强劲（半导体、造船、电池），但<span class="highlight">人口结构正在加速恶化</span>。
+        </p>
+        <ul>
+            <li>IMF 2025年4月版预测韩国2028年人均GDP仅$38,850；10月版调至$40,802。半年内上调近$2,000，主要反映半导体出口超预期</li>
+            <li>但韩国生育率0.72意味着：2028年起劳动年龄人口每年减少30万+，2030年代加速到50万+/年</li>
+            <li>韩元同样面临贬值压力——2024年韩元跌破1400，2025年仍在1350-1400区间</li>
+            <li><span class="highlight">我的判断</span>：乐观情景（$43,600）需要半导体持续高景气+韩元回升，概率约35%；
+                悲观情景（$34,000）反映半导体下行+人口悬崖+韩元弱势，概率约30%；
+                最可能的结果在$37,000-40,000之间</li>
+        </ul>
+
+        <h3><span class="tag tag-red">中国</span> 增速换挡中的确定性</h3>
+        <p>
+            中国的预测不确定性相对较小——因为增速虽在放缓，但绝对增量仍然可观。
+        </p>
+        <ul>
+            <li>IMF预测2026年增长4.5%，2027年约4.0%。即使悲观情景下3%增速，也远高于日韩</li>
+            <li>主要下行风险：房地产调整持续时间超预期、人口负增长加速、中美脱钩加深</li>
+            <li>主要上行因素：新质生产力（AI、新能源、高端制造）突破、人民币国际化推升汇率</li>
+            <li><span class="highlight">我的判断</span>：$14,500-18,200区间。基准情景约$16,000-17,000（增速3.5-4%+人民币温和贬值至7.3-7.5）</li>
+        </ul>
+
+        <h3><span class="tag tag-yellow">上海</span> 中国经济的领跑者</h3>
+        <p>
+            上海的人均GDP走势基本跟随全国趋势，但保持1.5-2个百分点的超额增速。
+        </p>
+        <ul>
+            <li>2025年人均GDP约22.8万元（~3.15万美元），服务业占比超75%</li>
+            <li>金融+科创双引擎：陆家嘴金融城+张江科学城，科创板上市企业数量全国领先</li>
+            <li><span class="highlight">我的判断</span>：乐观情景$40,500（接近韩国），悲观情景$32,000。基准约$35,000-37,000</li>
+        </ul>
+
+        <h3>🔮 2030年格局展望（基准情景）</h3>
+        <p>综合判断，最可能的2030年情景（非乐观也非悲观）：</p>
+        <ul>
+            <li><span class="highlight">韩国 ~$38,000-40,000</span>：仍居首位，但与日本差距可能缩小</li>
+            <li><span class="highlight">日本 ~$30,000-35,000</span>：取决于日元，可能低于韩国也可能反超</li>
+            <li><span class="highlight">上海 ~$35,000-37,000</span>：介于日韩之间，成为中国首个准发达城市</li>
+            <li><span class="highlight">中国 ~$16,000-17,000</span>：约为日韩的42-55%，差距持续缩小</li>
+            <li><span class="highlight">最大变量</span>：①日元走势（影响日本排名±$10,000）②中美关系（影响中国增速±1.5%）③半导体周期（影响韩国±$3,000）</li>
+        </ul>
+    </div>
+
+    <!-- 方法论 -->
+    <div class="section">
+        <h2>📚 数据来源与方法论</h2>
+        <p>
+            <strong>历史数据（2000-2025）</strong>：中国、日本、韩国2000-2024年数据来自快易数据（kylc.com），基于世界银行及IMF统计；
+            上海数据2000-2016来自聚汇数据（gotohui.com），2017-2025根据上海统计局公布的GDP总量与常住人口计算，并按年均汇率折算为美元。
+            <strong>2025年数据已更新为实际公布值</strong>：中国¥99,665（国家统计局2026年2月公报），日本$34,713与韩国$35,962（IMF WEO Oct 2025），
+            上海¥228,166（GDP 5.67万亿元÷2,485.41万人，按年均汇率7.25折算）。
+        </p>
+        <p style="margin-top:0.5rem;">
+            <strong>乐观预测（2026-2030）</strong>：以IMF《世界经济展望》（2025年10月版）为基准。
+            日本2026-2030数据点直接取自IMF WEO（$36,391→$42,702）；韩国2028年$40,802取自IMF Oct 2025版，
+            其余年份线性插值；中国2026年$14,600基于IMF预测，后续按4.5%→3.8%递减增速推算。
+        </p>
+        <p style="margin-top:0.5rem;">
+            <strong>悲观预测（2026-2030）</strong>：基于汇率维持弱势的假设。
+            日本假设日元2030年在170-180区间（参考longforecast.com预测），对应人均GDP约$28,500；
+            韩国假设韩元维持1,400-1,500区间+增速降至1.5%，对应约$34,000；
+            中国假设人民币贬至7.8-8.0+增速降至3%，对应约$14,500。
+        </p>
+        <p style="margin-top:0.5rem;color:#fb923c;">
+            ⚠️ 所有预测均受汇率波动、地缘政治、贸易政策等不确定因素影响，仅供参考，不构成投资建议。
+            名义人均GDP（美元计）不适合衡量实际生活水平变化，PPP数据更能反映购买力。
+        </p>
+    </div>
+
+    <div class="footer">
+        报告生成时间：2026年4月14日 · 数据来源：IMF WEO、世界银行、上海统计局、快易数据、longforecast.com · 祁然 (Kiri) 制作
+    </div>
+</div>
+
+<script>
+// ============ 数据 ============
+const years = [];
+for (let y = 2000; y <= 2030; y++) years.push(y);
+
+// 历史数据 (2000-2025) — 2025年为已公布实际数据
+const chinaHist = [969,1065,1163,1306,1530,1777,2129,2734,3523,3898,4629,5703,6405,7147,7781,8175,8254,8979,10085,10342,10627,12887,12970,12951,13303,13746];
+const japanHist = [39169,34406,32820,35387,38298,37812,35991,35779,39876,41308,44968,48760,49145,40898,38475,34960,39375,38834,39751,40415,40028,40094,34065,33836,32487,34713];
+const koreaHist = [12710,11981,13642,15211,17121,20167,22609,25078,22252,19937,24071,26175,26600,28449,30667,30171,30832,33296,35363,33826,33645,37518,34822,35674,36238,35962];
+const shanghaiHist = [3661,3877,4141,4726,5437,6028,6900,8410,9957,10600,11700,13300,14200,15500,16700,17500,18300,19747,22016,22189,22725,27195,26642,26950,29992,31471];
+
+// 乐观预测 (2026-2030) — IMF基准
+const chinaOpt = [14600,15400,16200,17000,17800];
+const japanOpt = [36391,37903,39735,41020,42702]; // IMF WEO Oct 2025
+const koreaOpt = [37400,39000,40802,42200,43600]; // IMF + 插值
+const shanghaiOpt = [33200,35000,36800,38600,40500];
+
+// 悲观预测 (2026-2030) — 汇率弱势
+const chinaPess = [13900,14300,14600,14600,14500]; // 增速放缓+人民币贬值
+const japanPess = [30500,30000,29500,29000,28500]; // 日元维持150-180
+const koreaPess = [34200,34000,34000,34000,34000]; // 韩元弱势+人口悬崖
+const shanghaiPess = [30000,30500,31000,31500,32000]; // 跟随全国悲观
+
+const forecastStart = 2026;
+const fIdx = years.indexOf(forecastStart); // 26
+
+// 合并完整序列
+const chinaFull = [...chinaHist, ...chinaOpt];
+const chinaPessFull = [...chinaHist, ...chinaPess];
+const japanFull = [...japanHist, ...japanOpt];
+const japanPessFull = [...japanHist, ...japanPess];
+const koreaFull = [...koreaHist, ...koreaOpt];
+const koreaPessFull = [...koreaHist, ...koreaPess];
+const shanghaiFull = [...shanghaiHist, ...shanghaiOpt];
+const shanghaiPessFull = [...shanghaiHist, ...shanghaiPess];
+
+// ============ 乐观情景图 ============
+const mainCtx = document.getElementById('mainChart').getContext('2d');
+new Chart(mainCtx, {
+    type: 'line',
+    data: {
+        labels: years,
+        datasets: [
+            {
+                label: '🇯🇵 日本（乐观）',
+                data: japanFull,
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#60a5fa'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🇰🇷 韩国（乐观）',
+                data: koreaFull,
+                borderColor: '#a78bfa',
+                backgroundColor: 'rgba(167,139,250,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#a78bfa'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🏙️ 上海（乐观）',
+                data: shanghaiFull,
+                borderColor: '#fbbf24',
+                backgroundColor: 'rgba(251,191,36,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#fbbf24'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🇨🇳 中国（乐观）',
+                data: chinaFull,
+                borderColor: '#f87171',
+                backgroundColor: 'rgba(248,113,113,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#f87171'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f1f5f9', bodyColor: '#cbd5e1',
+                borderColor: 'rgba(148,163,184,0.2)', borderWidth: 1, padding: 12,
+                callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}` }
+            }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(148,163,184,0.08)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+            y: {
+                grid: { color: 'rgba(148,163,184,0.08)' },
+                ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) },
+                title: { display: true, text: '人均GDP（美元）', color: '#94a3b8' }
+            }
+        }
+    }
+});
+
+// ============ 悲观情景图 ============
+const pessCtx = document.getElementById('pessimisticChart').getContext('2d');
+new Chart(pessCtx, {
+    type: 'line',
+    data: {
+        labels: years,
+        datasets: [
+            {
+                label: '🇯🇵 日本（悲观）',
+                data: japanPessFull,
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#60a5fa'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🇰🇷 韩国（悲观）',
+                data: koreaPessFull,
+                borderColor: '#a78bfa',
+                backgroundColor: 'rgba(167,139,250,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#a78bfa'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🏙️ 上海（悲观）',
+                data: shanghaiPessFull,
+                borderColor: '#fbbf24',
+                backgroundColor: 'rgba(251,191,36,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#fbbf24'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            },
+            {
+                label: '🇨🇳 中国（悲观）',
+                data: chinaPessFull,
+                borderColor: '#f87171',
+                backgroundColor: 'rgba(248,113,113,0.08)',
+                borderWidth: 2.5,
+                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#f87171'),
+                segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
+                fill: true, tension: 0.3,
+            }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 13 }, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f1f5f9', bodyColor: '#cbd5e1',
+                borderColor: 'rgba(148,163,184,0.2)', borderWidth: 1, padding: 12,
+                callbacks: { label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}` }
+            }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(148,163,184,0.08)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+            y: {
+                grid: { color: 'rgba(148,163,184,0.08)' },
+                ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) },
+                title: { display: true, text: '人均GDP（美元）', color: '#94a3b8' }
+            }
+        }
+    }
+});
+
+// ============ 增长率图 ============
+const growthYears = years.slice(1, fIdx + 1); // 只到2026
+function calcGrowth(arr, endIdx) {
+    return arr.slice(1, endIdx + 1).map((v, i) => ((v - arr[i]) / arr[i] * 100).toFixed(1));
+}
+const chinaGrowth = calcGrowth(chinaFull, fIdx);
+const japanGrowth = calcGrowth(japanFull, fIdx);
+const koreaGrowth = calcGrowth(koreaFull, fIdx);
+const shanghaiGrowth = calcGrowth(shanghaiFull, fIdx);
+
+const growthCtx = document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx, {
+    type: 'bar',
+    data: {
+        labels: growthYears,
+        datasets: [
+            { label: '🇨🇳 中国', data: chinaGrowth, backgroundColor: 'rgba(248,113,113,0.6)', borderColor: '#f87171', borderWidth: 1 },
+            { label: '🇯🇵 日本', data: japanGrowth, backgroundColor: 'rgba(96,165,250,0.6)', borderColor: '#60a5fa', borderWidth: 1 },
+            { label: '🇰🇷 韩国', data: koreaGrowth, backgroundColor: 'rgba(167,139,250,0.6)', borderColor: '#a78bfa', borderWidth: 1 },
+            { label: '🏙️ 上海', data: shanghaiGrowth, backgroundColor: 'rgba(251,191,36,0.6)', borderColor: '#fbbf24', borderWidth: 1 }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 12 }, usePointStyle: true, pointStyle: 'rect' } },
+            tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f1f5f9', bodyColor: '#cbd5e1',
+                callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%` }
+            }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(148,163,184,0.08)' }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45 } },
+            y: { grid: { color: 'rgba(148,163,184,0.08)' }, ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v + '%' } }
+        }
+    }
+});
+
+// ============ 数据表 ============
+const tbody = document.querySelector('#dataTable tbody');
+for (let i = 0; i < years.length; i++) {
+    const tr = document.createElement('tr');
+    const isForecast = years[i] >= forecastStart;
+    if (isForecast) tr.className = 'forecast-row';
+    tr.innerHTML = `
+        <td>${years[i]}${isForecast ? ' *' : ''}</td>
+        <td>$${chinaFull[i].toLocaleString()}</td>
+        <td>${isForecast ? '' : ''}$${japanFull[i].toLocaleString()}</td>
+        <td>${isForecast ? '' : ''}$${japanPessFull[i].toLocaleString()}</td>
+        <td>$${koreaFull[i].toLocaleString()}</td>
+        <td>$${koreaPessFull[i].toLocaleString()}</td>
+        <td>$${shanghaiFull[i].toLocaleString()}</td>
+        <td>$${shanghaiPessFull[i].toLocaleString()}</td>
+    `;
+    tbody.appendChild(tr);
+}
+</script>
+</body>
+</html>
