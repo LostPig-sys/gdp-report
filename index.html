@@ -36,7 +36,13 @@
             border-radius: 16px; padding: 2rem; margin-bottom: 2rem; backdrop-filter: blur(10px);
         }
         .chart-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem; color: #f1f5f9; }
-        .chart-container { position: relative; height: 480px; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            min-height: 300px;
+            max-height: 520px;
+        }
         .stats-grid {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 1.25rem; margin-bottom: 2rem;
@@ -128,8 +134,12 @@
         .warning-box p { color: #cbd5e1; font-size: 0.9rem; line-height: 1.6; }
         @media (max-width: 768px) {
             body { padding: 1rem; }
-            h1 { font-size: 1.5rem; }
-            .chart-container { height: 360px; }
+            h1 { font-size: 1.4rem; }
+            .chart-container {
+                aspect-ratio: auto;
+                min-height: 280px;
+                max-height: 380px;
+            }
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .scenario-box { grid-template-columns: 1fr; }
         }
@@ -186,7 +196,7 @@
     <!-- 主折线图：悲观情景 -->
     <div class="chart-wrapper">
         <div class="chart-title">📉 人均GDP变化趋势 — 悲观情景（2000–2030）<span class="tag tag-orange">汇率弱势·2026起预测</span></div>
-        <div class="chart-container" style="height:420px;">
+        <div class="chart-container" style="max-height:440px;">
             <canvas id="pessimisticChart"></canvas>
         </div>
     </div>
@@ -472,7 +482,7 @@ new Chart(mainCtx, {
                 borderColor: '#60a5fa',
                 backgroundColor: 'rgba(96,165,250,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#60a5fa'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -483,7 +493,7 @@ new Chart(mainCtx, {
                 borderColor: '#a78bfa',
                 backgroundColor: 'rgba(167,139,250,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#a78bfa'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -494,7 +504,7 @@ new Chart(mainCtx, {
                 borderColor: '#fbbf24',
                 backgroundColor: 'rgba(251,191,36,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#fbbf24'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -505,7 +515,7 @@ new Chart(mainCtx, {
                 borderColor: '#f87171',
                 backgroundColor: 'rgba(248,113,113,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#34d399' : '#f87171'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -547,7 +557,7 @@ new Chart(pessCtx, {
                 borderColor: '#60a5fa',
                 backgroundColor: 'rgba(96,165,250,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#60a5fa'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -558,7 +568,7 @@ new Chart(pessCtx, {
                 borderColor: '#a78bfa',
                 backgroundColor: 'rgba(167,139,250,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#a78bfa'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -569,7 +579,7 @@ new Chart(pessCtx, {
                 borderColor: '#fbbf24',
                 backgroundColor: 'rgba(251,191,36,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#fbbf24'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
@@ -580,7 +590,7 @@ new Chart(pessCtx, {
                 borderColor: '#f87171',
                 backgroundColor: 'rgba(248,113,113,0.08)',
                 borderWidth: 2.5,
-                pointRadius: years.map((_, i) => i >= fIdx ? 4 : 1.5),
+                pointRadius: years.map((_, i) => i >= fIdx ? 2 : 0),
                 pointBackgroundColor: years.map((_, i) => i >= fIdx ? '#f87171' : '#f87171'),
                 segment: { borderDash: ctx => ctx.p0DataIndex >= fIdx - 1 ? [6, 3] : undefined },
                 fill: true, tension: 0.3,
